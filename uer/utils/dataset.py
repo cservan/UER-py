@@ -14,7 +14,7 @@ def merge_dataset(dataset_path, workers_num):
     # Merge datasets.
     dataset_writer = open(dataset_path, "wb")
     for i in range(workers_num):
-        tmp_dataset_reader = open("dataset-tmp-" + str(i) + ".pt", "rb")
+        tmp_dataset_reader = open(dataset_path+"_dataset-tmp-" + str(i) + ".pt", "rb")
         while True:
             tmp_data = tmp_dataset_reader.read(2**20)
             if tmp_data:
@@ -22,7 +22,7 @@ def merge_dataset(dataset_path, workers_num):
             else:
                 break
         tmp_dataset_reader.close()
-        os.remove("dataset-tmp-" + str(i) + ".pt")
+        os.remove(dataset_path+"_dataset-tmp-" + str(i) + ".pt")
     dataset_writer.close()
 
 
@@ -101,7 +101,7 @@ class BertDataset(Dataset):
         docs_buffer = []
         document = []
         pos = 0
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:
                 f.readline()
@@ -232,7 +232,7 @@ class MlmDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         docs_buffer = []
         for _ in range(self.dup_factor):
             pos = 0
@@ -334,7 +334,7 @@ class AlbertDataset(Dataset):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
         document = []
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         for _ in range(self.dup_factor):
             pos = 0
             with open(self.corpus_path, mode="r", encoding="utf-8") as f:
@@ -410,6 +410,7 @@ class AlbertDataset(Dataset):
                     src.extend(tokens_b)
                     src.append(self.vocab.get(SEP_TOKEN))
                     seg_pos.append(len(src))
+#                    print(i, src)
 
                     pad_num = 0
                     if len(src) != self.seq_length:
@@ -422,7 +423,6 @@ class AlbertDataset(Dataset):
                     else:
                         src = (src, pad_num)
                         instance = (src, is_wrong_order, seg_pos)
-
                     instances.append(instance)
                 current_chunk = []
                 current_length = 0
@@ -434,7 +434,7 @@ class LmDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         pos = 0
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:
@@ -471,7 +471,7 @@ class BilmDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         pos = 0
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:
@@ -519,7 +519,7 @@ class MtDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         pos = 0
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:
@@ -687,7 +687,7 @@ class ClsDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         pos = 0
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:
@@ -752,7 +752,7 @@ class PrefixlmDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         pos = 0
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:
@@ -797,7 +797,7 @@ class ClsMlmDataset(Dataset):
     def worker(self, proc_id, start, end):
         print("Worker %d is building dataset ... " % proc_id)
         set_seed(self.seed)
-        dataset_writer = open("dataset-tmp-" + str(proc_id) + ".pt", "wb")
+        dataset_writer = open(self.dataset_path+"_dataset-tmp-" + str(proc_id) + ".pt", "wb")
         pos = 0
         with open(self.corpus_path, mode="r", encoding="utf-8") as f:
             while pos < start:

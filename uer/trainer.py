@@ -78,6 +78,7 @@ class Trainer(object):
         self.batch_size = args.batch_size
         self.world_size = args.world_size
         self.logger = args.logger
+        self.optimizer = None
 
     def forward_propagation(self, batch, model):
 
@@ -89,6 +90,8 @@ class Trainer(object):
 
     def train(self, args, gpu_id, rank, loader, model, optimizer, scheduler):
         model.train()
+        self.optimizer = optimizer
+
         loader_iter = iter(loader)
         while True:
             if self.current_step == self.total_steps + 1:
@@ -179,6 +182,7 @@ class BertTrainer(Trainer):
         self.total_loss_mlm = 0.0
         self.total_correct_mlm = 0.0
         self.total_denominator = 0.0
+        self.lr = 0.0
 
     def forward_propagation(self, batch, model):
         src, tgt_mlm, tgt_sp, seg = batch
@@ -195,6 +199,8 @@ class BertTrainer(Trainer):
         self.total_denominator += denominator.item()
         self.total_instances += src.size(0)
         loss = loss / self.accumulation_steps
+        if self.optimizer != None:
+            self.lr = self.optimizer.param_groups[0]["lr"]
 
         return loss
 
@@ -209,7 +215,8 @@ class BertTrainer(Trainer):
               "| loss_mlm: {:3.3f}"
               "| loss_sp: {:3.3f}"
               "| acc_mlm: {:3.3f}"
-              "| acc_sp: {:3.3f}".format(
+              "| acc_sp: {:3.3f}"
+              "| lr: {:3.6f}".format(
                   self.current_step,
                   self.total_steps,
                   done_tokens / (time.time() - self.start_time),
@@ -217,7 +224,8 @@ class BertTrainer(Trainer):
                   self.total_loss_mlm / self.report_steps,
                   self.total_loss_sp / self.report_steps,
                   self.total_correct_mlm / self.total_denominator,
-                  self.total_correct_sp / self.total_instances))
+                  self.total_correct_sp / self.total_instances,
+                  self.lr))
 
         self.total_loss, self.total_loss_mlm, self.total_loss_sp = 0.0, 0.0, 0.0
         self.total_correct_mlm, self.total_denominator = 0.0, 0.0
